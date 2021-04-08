@@ -1,0 +1,7 @@
+*.json
+*.html
+*.ipynb
+*.cookie
+setting.py
+__pycache__/
+.ipynb_checkpoints/
