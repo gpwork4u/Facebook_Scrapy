@@ -23,11 +23,15 @@ def load_cookies(filename):
 class facebook(scrapy.Spider):
     name = "facebook"
     headers = {
-        'scheme': 'https',
-        'accept': '*/*',
-        'accept-language': 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7,zh-CN;q=0.6,ja;q=0.5',
-        'user-agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:76.0) ' +
-        'Gecko/20100101 Firefox/76.0',
+        'Host': 'mbasic.facebook.com',
+        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'zh-TW,zh;q=0.8,en-US;q=0.5,en;q=0.3',
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Origin': 'https://mbasic.facebook.com',
+        'DNT': '1',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
     }
 
     def login(self, email, password):
@@ -64,7 +68,7 @@ class facebook(scrapy.Spider):
         return load_cookies(email+'.cookie')
 
     def start_requests(self):
-        cookies = self.login(EMAIL, PASSWORD)
+        self.cookies = self.login(EMAIL, PASSWORD)
         url = 'https://mbasic.facebook.com/profile/timeline/stream/?' + \
             'end_time=%s&' % str(time.time()) + \
             'profile_id=%s' % str(USER_ID)
@@ -72,7 +76,7 @@ class facebook(scrapy.Spider):
             url,
         ]
         for url in urls:
-            yield scrapy.Request(url=url, headers=self.headers, cookies=cookies, callback=self.parse)
+            yield scrapy.Request(url=url, headers=self.headers, cookies=self.cookies, callback=self.parse)
 
     def parse(self, response):
         item = PostItem()
@@ -82,13 +86,15 @@ class facebook(scrapy.Spider):
             if 'data-ft' not in article.attrib:
                 continue
             data = json.loads(article.attrib['data-ft'])
+            if 'mf_story_key' not in data:
+                continue
             item['author'] = data['mf_story_key']
             item['author'] = article.css('strong').css('a::text').get()
             item['content'] = ''
             for p in article.css('span').css('p'):
                 for a in p.css('a::text').getall():
                     item['content'] += a + ' '
-                if len(p.css('p::text').get()) > 0:
+                if len(p.css('p::text')) > 0:
                     item['content'] += p.css('p::text').get() + '\n'
             item['images'] = []
             for img in article.css('img'):
@@ -96,3 +102,6 @@ class facebook(scrapy.Spider):
             item['post_url'] = 'https://mbasic.facebook.com/story.php?story_fbid=%s&id=1' % item['author']
             item['time'] = article.css('abbr::text').get()
             yield item
+        if 'id' in article_section.xpath('following-sibling::div').attrib:
+            url = 'https://mbasic.facebook.com' + article_section.xpath('following-sibling::div').css('a').attrib['href']
+            yield scrapy.Request(url=url, headers=self.headers, cookies=self.cookies, callback=self.parse)
