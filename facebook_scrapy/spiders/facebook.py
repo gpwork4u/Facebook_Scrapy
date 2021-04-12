@@ -96,7 +96,7 @@ class facebook(scrapy.Spider):
             data = json.loads(article.attrib['data-ft'])
             if 'mf_story_key' not in data:
                 continue
-            item['author'] = data['mf_story_key']
+            item['id'] = data['mf_story_key']
             item['author'] = article.css('strong').css('a::text').get()
             item['content'] = ''
             for p in article.css('span').css('p'):
