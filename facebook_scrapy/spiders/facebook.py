@@ -1,6 +1,5 @@
 import scrapy
 from facebook_scrapy.items import PostItem
-from facebook_scrapy.settings import EMAIL, PASSWORD
 import pickle
 import requests
 import logging
@@ -9,6 +8,8 @@ import time
 from bs4 import BeautifulSoup
 import json
 
+EMAIL = 'your_email'
+PASSWORD = 'your_password'
 USER_ID = 'user id'
 
 
