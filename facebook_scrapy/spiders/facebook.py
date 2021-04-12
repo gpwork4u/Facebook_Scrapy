@@ -13,6 +13,10 @@ PASSWORD = 'your_password'
 USER_ID = 'user id'
 
 
+def handler(post):
+    pass
+
+
 def save_cookies(session, filename):
     with open(filename, 'wb') as f:
         pickle.dump(session.cookies, f)
@@ -24,7 +28,7 @@ def load_cookies(filename):
 
 
 class facebook(scrapy.Spider):
-    version = '0.0.1'
+    version = '0.0.2'
     name = "facebook"
     headers = {
         'Host': 'mbasic.facebook.com',
@@ -105,6 +109,7 @@ class facebook(scrapy.Spider):
                 item['images'].append(img.attrib['src'])
             item['post_url'] = 'https://mbasic.facebook.com/story.php?story_fbid=%s&id=1' % item['author']
             item['time'] = article.css('abbr::text').get()
+            handler(item)
             yield item
         if 'id' in article_section.xpath('following-sibling::div').attrib:
             url = 'https://mbasic.facebook.com' + \
