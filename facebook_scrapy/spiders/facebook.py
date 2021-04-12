@@ -10,6 +10,8 @@ from bs4 import BeautifulSoup
 import json
 
 USER_ID = 'user id'
+
+
 def save_cookies(session, filename):
     with open(filename, 'wb') as f:
         pickle.dump(session.cookies, f)
@@ -21,6 +23,7 @@ def load_cookies(filename):
 
 
 class facebook(scrapy.Spider):
+    version = '0.0.1'
     name = "facebook"
     headers = {
         'Host': 'mbasic.facebook.com',
@@ -103,5 +106,7 @@ class facebook(scrapy.Spider):
             item['time'] = article.css('abbr::text').get()
             yield item
         if 'id' in article_section.xpath('following-sibling::div').attrib:
-            url = 'https://mbasic.facebook.com' + article_section.xpath('following-sibling::div').css('a').attrib['href']
+            url = 'https://mbasic.facebook.com' + \
+                article_section.xpath(
+                    'following-sibling::div').css('a').attrib['href']
             yield scrapy.Request(url=url, headers=self.headers, cookies=self.cookies, callback=self.parse)
